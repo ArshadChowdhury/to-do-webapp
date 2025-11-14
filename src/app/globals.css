@@ -8,8 +8,13 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-background-dark: #0d224a;
+  --color-light-gray: #4b5563;
+  --color-light-border: #d1d5db;
+  --color-primary-blue: #5272ff;
+  --color-error-red: #ee0039;
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-inter: var(--font-inter);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +27,6 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter);
+  /* overflow: hidden; */
 }
