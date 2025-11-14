@@ -7,41 +7,22 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { signupApi } from "@/services/auth.service";
+import { loginApi } from "@/services/auth.service";
 import { EyeOff, Eye } from "lucide-react";
 import Link from "next/link";
 
-const SignupSchema = z
-  .object({
-    firstName: z
-      .string()
-      .min(1, { message: "First name is required" })
-      .regex(/^[A-Za-z\s-]+$/, {
-        message: "Please enter a valid name format",
-      }),
-    lastName: z
-      .string()
-      .min(1, { message: "Last name is required" })
-      .regex(/^[A-Za-z\s-]+$/, {
-        message: "Please enter a valid name format",
-      }),
-    email: z
-      .string()
-      .min(1, { message: "Email is required" })
-      .email({ message: "Must be a valid email address" }),
-    password: z
-      .string()
-      .min(4, { message: "Password must be at least 4 characters" }),
-    confirmPassword: z
-      .string()
-      .min(1, { message: "Confirm password is required" }),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
+const LoginSchema = z.object({
+  email: z
+    .string()
+    .min(1, { message: "Email is required" })
+    .email({ message: "Must be a valid email address" }),
+  password: z
+    .string()
+    .min(4, { message: "Password must be at least 4 characters" }),
+  rememberMe: z.boolean().optional(),
+});
 
-const SignupPage = () => {
+const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const {
     register,
@@ -49,33 +30,29 @@ const SignupPage = () => {
     formState: { errors, isSubmitting },
     reset,
   } = useForm({
-    resolver: zodResolver(SignupSchema),
+    resolver: zodResolver(LoginSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
       email: "",
       password: "",
-      confirmPassword: "",
+      rememberMe: false,
     },
   });
 
   const { mutateAsync } = useMutation({
-    mutationFn: signupApi,
+    mutationFn: loginApi,
     onSuccess: () => {
-      toast.success("Signup successful!");
+      toast.success("Login successful!");
       reset();
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Signup failed!");
+      toast.error(error?.response?.data?.message || "Login failed!");
     },
   });
 
   const onSubmit = async (data: any) => {
-    const { confirmPassword, ...rest } = data;
+    const { rememberMe, ...rest } = data;
 
     const formData = new FormData();
-    formData.append("first_name", rest.firstName);
-    formData.append("last_name", rest.lastName);
     formData.append("email", rest.email);
     formData.append("password", rest.password);
 
@@ -87,7 +64,7 @@ const SignupPage = () => {
       <div className="md:w-5/12 w-full h-84 md:h-screen">
         <Image
           className="w-full h-full object-cover"
-          src="/banner/signup-banner.svg"
+          src="/banner/login-banner.svg"
           height={840}
           width={806}
           alt="Banner"
@@ -97,7 +74,7 @@ const SignupPage = () => {
       <div className="md:w-7/12 w-full flex flex-col items-center justify-center gap-9">
         <div className="w-full flex flex-col gap-2 max-w-lg">
           <h2 className="text-3xl font-bold text-background-dark text-center">
-            Create your account
+            Log in to your account
           </h2>
           <p className="text-light-gray text-center">
             Start managing your tasks efficiently
@@ -106,50 +83,8 @@ const SignupPage = () => {
 
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-4 text-black"
+          className="max-w-lg w-full flex flex-col gap-4 text-black"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* First Name Field */}
-            <div className="flex flex-col gap-1">
-              <label htmlFor="firstName" className="text-sm font-medium">
-                First Name
-              </label>
-              <input
-                id="firstName"
-                type="text"
-                placeholder="First Name"
-                {...register("firstName")}
-                className="w-full px-4 py-3 rounded-lg outline-none border border-light-border"
-                aria-invalid={errors.firstName ? "true" : "false"}
-              />
-              {errors.firstName && (
-                <p className="text-error-red text-xs">
-                  {errors.firstName.message}
-                </p>
-              )}
-            </div>
-
-            {/* Last Name Field */}
-            <div className="flex flex-col gap-1">
-              <label htmlFor="lastName" className="text-sm font-medium">
-                Last Name
-              </label>
-              <input
-                id="lastName"
-                type="text"
-                placeholder="Last Name"
-                {...register("lastName")}
-                className="w-full px-4 py-3 rounded-lg outline-none border border-light-border"
-                aria-invalid={errors.lastName ? "true" : "false"}
-              />
-              {errors.lastName && (
-                <p className="text-error-red text-xs">
-                  {errors.lastName.message}
-                </p>
-              )}
-            </div>
-          </div>
-
           {/* Email Field */}
           <div className="flex flex-col gap-1">
             <label htmlFor="email" className="text-sm font-medium">
@@ -204,30 +139,28 @@ const SignupPage = () => {
             )}
           </div>
 
-          {/* Confirm Password Field */}
-          <div className="space-y-1">
-            <label
-              htmlFor="confirmPassword"
-              className="text-sm font-medium flex items-center"
-            >
-              Confirm Password
+          {/* Remember Me + Forgot Password */}
+          <div className="flex items-center justify-between text-sm mt-2">
+            {/* Remember Me */}
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                {...register("rememberMe")}
+                className="w-4 h-4 accent-primary-blue cursor-pointer"
+              />
+              <span className="text-light-black">Remember me</span>
             </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              placeholder="Confirm Password"
-              {...register("confirmPassword")}
-              className="w-full px-4 py-3 rounded-lg outline-none border border-light-border"
-              aria-invalid={errors.confirmPassword ? "true" : "false"}
-            />
-            {errors.confirmPassword && (
-              <p className="text-error-red text-xs">
-                {errors.confirmPassword.message}
-              </p>
-            )}
+
+            {/* Forgot Password */}
+            <Link
+              href="#"
+              className="text-primary-blue text-sm hover:underline font-medium"
+            >
+              Forgot your password?
+            </Link>
           </div>
 
-          {/* Sign Up Button */}
+          {/* Login Button */}
           <button
             type="submit"
             disabled={isSubmitting}
@@ -259,13 +192,13 @@ const SignupPage = () => {
                 ></path>
               </svg>
             ) : (
-              "Sign Up"
+              "Log In"
             )}
           </button>
           <p className="text-light-gray text-center">
-            Already have an account ?{" "}
-            <Link className="text-primary-blue" href={"/login"}>
-              Log in
+            Don&apos;t have an account?{" "}
+            <Link className="text-primary-blue" href={"/sign-up"}>
+              Register now
             </Link>
           </p>
         </form>
@@ -274,4 +207,4 @@ const SignupPage = () => {
   );
 };
 
-export default SignupPage;
+export default LoginPage;
